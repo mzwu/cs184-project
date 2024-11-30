@@ -1,4 +1,40 @@
 import torch
+import random
+
+def transition(state, action):
+    """
+    Life is pleasant.
+    Death is peaceful.
+    It's the transition that's troublesome.
+                             - Isaac Asimov 
+    """
+    NUM_PIECES = 7
+    QUEUE_SIZE = 5
+    NUM_ACTIONS = 80 # change this number later
+
+    # Swap held piece
+    SWAP = (action > NUM_ACTIONS / 2)
+    if SWAP:
+        state[-8:-1] = state[-50:-43]
+        state[-1] = 0 # im just gonna assume that this last slot equals 1 iff holding a piece
+
+    # Update queue
+    current_pieces = []
+    for i in reversed(range(QUEUE_SIZE)):
+        start = -((i + 3) * NUM_PIECES + 1)
+        state[start:start+7] = state[start+7:start+14]
+        # Grab current piece values
+        arg = torch.argmax(state[start:start+7])
+        current_pieces.append[arg]
+    # Add next piece to queue - not counting current piece bc that would make it deterministic
+    remainder = list(set(range(6)) - set(current_pieces))
+    next_indicator = random.choice(remainder)
+    next_piece = torch.zeros(NUM_PIECES, dtype=torch.int32)
+    next_piece[next_indicator] = 1
+    state[-15:-8] = next_piece
+
+    return state
+
 
 def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=5):
     """
@@ -57,6 +93,7 @@ def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=
         state[total_cells + i * num_pieces:total_cells + (i + 1) * num_pieces] = row 
 
     # Handle held piece
+    # i think you can just make the last index one at the start to represent nothing held
     random_index = torch.randint(0, num_pieces + 1, (1,)).item()
     held_piece = torch.zeros(num_pieces + 1, dtype=torch.int32)
     held_piece[random_index] = 1
