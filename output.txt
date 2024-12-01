@@ -1,0 +1,276 @@
+7 7 249 200 100
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: O
+Held: S
+Queue: LJZTI
+
+Dropping Piece O at column 1
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+_OO_______
+_OO_______
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: L
+Held: S
+Queue: JZTIL
+
+Dropping Piece L at column 6
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+_OO_____O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: J
+Held: S
+Queue: ZTILJ
+
+Dropping Piece J at column 4
+__________
+__________
+__________
+__________
+__________
+__________
+__________
+____O_____
+_OO_OOO_O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: Z
+Held: S
+Queue: TILJJ
+
+Dropping Piece Z at column 6
+__________
+__________
+__________
+__________
+__________
+__________
+______OO__
+____O__OO_
+_OO_OOO_O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: T
+Held: S
+Queue: ILJJI
+
+Dropping Piece T at column 6
+__________
+__________
+__________
+__________
+_______O__
+______OOO_
+______OO__
+____O__OO_
+_OO_OOO_O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: I
+Held: S
+Queue: LJJIT
+
+Dropping Piece I at column 4
+__________
+__________
+__________
+____OOOO__
+_______O__
+______OOO_
+______OO__
+____O__OO_
+_OO_OOO_O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: L
+Held: S
+Queue: JJITT
+
+Dropping Piece L at column 0
+__________
+__________
+__________
+____OOOO__
+_______O__
+______OOO_
+__O___OO__
+OOO_O__OO_
+_OO_OOO_O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: J
+Held: S
+Queue: JITTL
+
+Dropping Piece J at column 6
+__________
+______O___
+______OOO_
+____OOOO__
+_______O__
+______OOO_
+__O___OO__
+OOO_O__OO_
+_OO_OOO_O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: J
+Held: S
+Queue: ITTLL
+
+Dropping Piece J at column 1
+__________
+______O___
+______OOO_
+____OOOO__
+_O_____O__
+_OOO__OOO_
+__O___OO__
+OOO_O__OO_
+_OO_OOO_O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: I
+Held: S
+Queue: TTLLI
+
+Dropping Piece I at column 5
+_____OOOO_
+______O___
+______OOO_
+____OOOO__
+_O_____O__
+_OOO__OOO_
+__O___OO__
+OOO_O__OO_
+_OO_OOO_O_
+_OO___OOO_
+OOOO_OOOOO
+OOOOOOOO_O
+OOOOO_OOOO
+OO_OOOOOOO
+O_OOOOOOOO
+OOOOOO_OOO
+OOO_OOOOOO
+_OOOOOOOOO
+OOOOOOO_OO
+OOOOOOOOO_
+Current: T
+Held: S
+Queue: TLLIL
+
+Dropping Piece T at column 4
