@@ -3,6 +3,7 @@ import random
 
 piece_names = "IJLOSTZ"
 piece_dims = [4, 3, 3, 2, 3, 3, 3]
+piece_rots = [2, 4, 4, 1, 2, 4, 2]
 piece_shapes = [
     [
         [0,0,0,0],
@@ -77,17 +78,20 @@ def transition(state, action):
     QUEUE_SIZE = 5
     NUM_ACTIONS = 80 # change this number later
 
+    state = state.detach().clone()
     # drop piece first to update board, return if failed
     state = drop_piece(state, action)
     if state == None:
-        return None
+        return None, 0, True
+
+    state, cleared, done = clear_lines(state)
 
     # Swap held piece
     SWAP = (action >= NUM_ACTIONS / 2)
     if SWAP:
-        tmp = state[-7:0]
-        state[-7:0] = state[-49:-42]
-        state[-49:-42] = tmp
+        tmp = state[242:249]
+        state[242:249] = state[200:207]
+        state[200:207] = tmp
 
     # Update queue
     current_pieces = []
@@ -98,19 +102,20 @@ def transition(state, action):
         arg = torch.argmax(state[start:start+7])
         current_pieces.append(arg)
     # Add next piece to queue - not counting current piece bc that would make it deterministic
-    remainder = list(set(range(6)) - set(current_pieces))
+    remainder = [i for i in range(7) if i not in current_pieces]
     next_indicator = random.choice(remainder)
     next_piece = torch.zeros(NUM_PIECES, dtype=torch.int32)
     next_piece[next_indicator] = 1
     state[-14:-7] = next_piece
 
-    return state
+    return state, cleared, done
 
 def drop_piece(state, action):
     # extract piece information
+    # print(state, action)
     ind = torch.argmax(state[200:207])
     if action >= 40:
-        ind = torch.argmax(state[-7:0])
+        ind = torch.argmax(state[242:249])
 
     dim = piece_dims[ind]
     shape = piece_shapes[ind]
@@ -119,14 +124,17 @@ def drop_piece(state, action):
     col = -1 + (action % 10)
     rot = (action // 10) % 4
 
+    if rot >= piece_rots[ind]:
+        return None
+
     for _iter in range(rot):
         new_shape = [[0]*dim for i in range(dim)]
         for x in range(dim):
             for y in range(dim):
-                new_shape[y][dim-1-x] = shape[x][y]
+                new_shape[dim-1-y][x] = shape[x][y]
         shape = new_shape
 
-    print("Dropping Piece", piece_names[ind], "at column", col)
+    # print("Dropping Piece", piece_names[ind], "at column", col)
     
     # find bounding box
     box = [dim, -1, dim, -1]
@@ -167,9 +175,38 @@ def drop_piece(state, action):
         
         piece = new_piece
     
-    new_state = state.detach().clone()
-    new_state[0:200] = torch.add(new_state[0:200], piece)
-    return new_state
+    state[0:200] = torch.add(state[0:200], piece)
+    return state
+
+def clear_lines(state):
+    cleared = 0
+    done = False
+    for row in range(19, -1, -1):
+        if torch.sum(state[row*10 : (row+1)*10]) == 10:
+            cleared += 1
+            if row == 19:
+                done = True
+        else:
+            state[(row+cleared)*10 : (row+cleared+1)*10] = state[row*10 : (row+1)*10]
+    state[0 : cleared*10] = torch.zeros(cleared*10, dtype = torch.int32)
+    return state, cleared, done
+
+def eval(state):
+    if state == None:
+        return -1e9
+    grid, pieces = extract_info(state)
+    height = [20]*10
+    for col in range(10):
+        while height[col] > 0 and grid[20 - height[col]][col] == '_':
+            height[col] -= 1 
+    agg = sum(height)
+    bump = sum([abs(height[i+1] - height[i]) for i in range(9)])
+    holes = 0
+    for x in range(20):
+        for y in range(10):
+            if grid[x][y] == '_' and x > 20 - height[y]:
+                holes += 1
+    return -0.510066 * agg + -0.35663 * holes + -0.184483 * bump
 
 def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=5):
     """
@@ -234,9 +271,27 @@ def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=
 if __name__ == "__main__":
     state = starting_position()
     print_info(state)
+    moves = 0
     while True:
-        state = transition(state, random.randint(1, 7))
+        best_score, best_act = -1e9, -1
+        for act in range(80):
+            cur_score = -1e9
+            nxt, cleared, done = transition(state, act)
+            if nxt == None:
+                continue
+            for act2 in range(80):
+                nxt2, cleared2, done2 = transition(nxt, act2)
+                if nxt2 == None:
+                    continue
+                cur_score = max(cur_score, 0.760666 * (cleared + cleared2) + eval(nxt2))
+            if cur_score > best_score:
+                best_score, best_act = cur_score, act
+        moves += 1
+        state, cleared, done = transition(state, best_act)
         if state == None:
             break 
 
         print_info(state)
+        if done:
+            print("Finished in", moves, "moves")
+            break
