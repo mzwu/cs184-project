@@ -292,12 +292,12 @@ if __name__ == "__main__":
             if nxt == None:
                 continue
                 
-            # cur_score = 0.760777 * cleared + eval(nxt)
-            for act2 in range(80):
-                nxt2, cleared2, done2 = transition(nxt, act2)
-                if nxt2 == None:
-                    continue
-                cur_score = max(cur_score, 0.760666 * (cleared + cleared2) + eval(nxt2))
+            cur_score = 0.760777 * cleared + eval(nxt)
+            # for act2 in range(80):
+            #     nxt2, cleared2, done2 = transition(nxt, act2)
+            #     if nxt2 == None:
+            #         continue
+            #     cur_score = max(cur_score, 0.760666 * (cleared + cleared2) + eval(nxt2))
             if cur_score > best_score:
                 best_score, best_act = cur_score, act
         moves += 1
