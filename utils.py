@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import random
 
 piece_names = "IJLOSTZ"
@@ -83,9 +84,9 @@ def extract_info(state):
 
     pieces = ""
     for i in range(7):
-        ind = torch.argmax(state[200 + i*7 : 200 + (i+1)*7])
-        if torch.sum(state[200 + i*7 : 200 + (i+1)*7]) > 1:
-            print("alert", i, torch.sum(state[200 + i*7 : 200 + (i+1)*7]))
+        ind = np.argmax(state[200 + i*7 : 200 + (i+1)*7])
+        if np.sum(state[200 + i*7 : 200 + (i+1)*7]) > 1:
+            print("alert", i, np.sum(state[200 + i*7 : 200 + (i+1)*7]))
         pieces += piece_names[ind]
 
     return grid, pieces
@@ -110,10 +111,10 @@ def transition(state, action):
     QUEUE_SIZE = 5
     NUM_ACTIONS = 80 # change this number later
 
-    state = state.detach().clone()
+    state = np.copy(state)
     # drop piece first to update board, return if failed
     state = drop_piece(state, action)
-    if state == None:
+    if state is None:
         return None, 0, True
 
     state, cleared, done = clear_lines(state)
@@ -131,13 +132,13 @@ def transition(state, action):
         start = -((i + 3) * NUM_PIECES)
         state[start:start+7] = state[start+7:start+14]
         # Grab current piece values
-        arg = torch.argmax(state[start:start+7])
+        arg = np.argmax(state[start:start+7])
         current_pieces.append(arg)
 
     # Add next piece to queue - not counting current piece bc that would make it deterministic
     remainder = [i for i in range(7) if i not in current_pieces]
     next_indicator = random.choice(remainder)
-    next_piece = torch.zeros(NUM_PIECES, dtype=torch.int32)
+    next_piece = np.zeros(NUM_PIECES, dtype='uint8')
     next_piece[next_indicator] = 1
     state[-14:-7] = next_piece
 
@@ -146,9 +147,9 @@ def transition(state, action):
 def drop_piece(state, action):
     # extract piece information
     # print(state, action)
-    ind = torch.argmax(state[200:207])
+    ind = np.argmax(state[200:207])
     if action >= 40:
-        ind = torch.argmax(state[242:249])
+        ind = np.argmax(state[242:249])
 
     # extract column and rotation from action number
     col = -1 + (action % 10)
@@ -191,17 +192,17 @@ def clear_lines(state):
     cleared = 0
     done = False
     for row in range(19, -1, -1):
-        if torch.sum(state[row*10 : (row+1)*10]) == 10:
+        if np.sum(state[row*10 : (row+1)*10]) == 10:
             cleared += 1
             if row == 19:
                 done = True
         elif cleared != 0:
             state[(row+cleared)*10 : (row+cleared+1)*10] = state[row*10 : (row+1)*10]
-    state[0 : cleared*10] = torch.zeros(cleared*10, dtype = torch.int32)
+    state[0 : cleared*10] = np.zeros(cleared*10, dtype = 'uint8')
     return state, cleared, done
 
 def eval(state):
-    if state == None:
+    if state is None:
         return -1e9
     grid, pieces = extract_info(state)
 
@@ -244,7 +245,7 @@ def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=
     (can also be empty)
     
     Returns:
-        torch.Tensor: A 1D tensor of size 250 meeting the above constraints.
+        np.Array: A 1D array of size 250 meeting the above constraints.
     """
     # Initialize variables
     num_pieces = 7  # total number of possible tetris pieces
@@ -256,16 +257,16 @@ def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=
     print(num_pieces, my_pieces, total_indicators, total_cells, starting_holes)
 
     # Create a tensor of size 250 initialized to zeros
-    state = torch.zeros(total_indicators, dtype=torch.int32)
+    state = np.zeros(total_indicators, dtype='uint8')
     
     # Populate bottom 10 rows
     prev_hole = -1
     for i in range(starting_rows):  
         # Start with all ones
-        row = torch.ones(row_length, dtype=torch.int32)  
+        row = np.ones(row_length, dtype='uint8')  
 
         # Determine index of hole in current row
-        possible_values = torch.tensor([i for i in range(row_length) if i != prev_hole], dtype=torch.int32)
+        possible_values = np.array([i for i in range(row_length) if i != prev_hole], dtype='uint8')
         next_hole = possible_values[torch.randint(0, len(possible_values), (1,))].item()
 
         # Create and set row
@@ -279,7 +280,7 @@ def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=
     # Populate starting pieces (now including held piece)
     for i in range(my_pieces):
         # Start with all zeros
-        row = torch.zeros(num_pieces, dtype=torch.int32)
+        row = np.zeros(num_pieces, dtype='uint8')
 
         # Indicate which piece and add row
         row[sample[i]] = 1
@@ -297,20 +298,20 @@ if __name__ == "__main__":
         for act in range(80):
             cur_score = -1e9
             nxt, cleared, done = transition(state, act)
-            if nxt == None:
+            if nxt is None:
                 continue
                 
             cur_score = 0.760777 * cleared + eval(nxt)
             # for act2 in range(80):
             #     nxt2, cleared2, done2 = transition(nxt, act2)
-            #     if nxt2 == None:
+            #     if nxt2 is None:
             #         continue
             #     cur_score = max(cur_score, 0.760666 * (cleared + cleared2) + eval(nxt2))
             if cur_score > best_score:
                 best_score, best_act = cur_score, act
         moves += 1
         state, cleared, done = transition(state, best_act)
-        if state == None:
+        if state is None:
             break 
 
         print_info(state)
