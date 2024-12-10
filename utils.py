@@ -41,6 +41,36 @@ piece_shapes = [
         [0,0,0]
     ]
 ]
+piece_shape_rots = []
+piece_box_rots = []
+
+def initialize():
+    for ind in range(7):
+        rots = []
+        boxs = []
+        dim = piece_dims[ind]
+        for rot in range(piece_rots[ind]):
+            shape = piece_shapes[ind]
+            for _iter in range(rot):
+                new_shape = [[0]*dim for i in range(dim)]
+                for x in range(dim):
+                    for y in range(dim):
+                        new_shape[dim-1-y][x] = shape[x][y]
+                shape = new_shape
+            rots.append(shape)
+
+            # find bounding box
+            box = [dim, -1, dim, -1]
+            for x in range(dim):
+                for y in range(dim):
+                    if shape[x][y] == 1:
+                        box[0] = min(box[0], x)
+                        box[1] = max(box[1], x)
+                        box[2] = min(box[2], y)
+                        box[3] = max(box[3], y)
+            boxs.append(box)
+        piece_shape_rots.append(rots)
+        piece_box_rots.append(boxs)
 
 def extract_info(state):
     grid = ["" for i in range(20)]
@@ -50,12 +80,14 @@ def extract_info(state):
                 grid[row] += "O"
             else:
                 grid[row] += "_"
+
     pieces = ""
     for i in range(7):
         ind = torch.argmax(state[200 + i*7 : 200 + (i+1)*7])
         if torch.sum(state[200 + i*7 : 200 + (i+1)*7]) > 1:
             print("alert", i, torch.sum(state[200 + i*7 : 200 + (i+1)*7]))
         pieces += piece_names[ind]
+
     return grid, pieces
 
 def print_info(state):
@@ -101,6 +133,7 @@ def transition(state, action):
         # Grab current piece values
         arg = torch.argmax(state[start:start+7])
         current_pieces.append(arg)
+
     # Add next piece to queue - not counting current piece bc that would make it deterministic
     remainder = [i for i in range(7) if i not in current_pieces]
     next_indicator = random.choice(remainder)
@@ -117,9 +150,6 @@ def drop_piece(state, action):
     if action >= 40:
         ind = torch.argmax(state[242:249])
 
-    dim = piece_dims[ind]
-    shape = piece_shapes[ind]
-
     # extract column and rotation from action number
     col = -1 + (action % 10)
     rot = (action // 10) % 4
@@ -127,55 +157,34 @@ def drop_piece(state, action):
     if rot >= piece_rots[ind]:
         return None
 
-    for _iter in range(rot):
-        new_shape = [[0]*dim for i in range(dim)]
-        for x in range(dim):
-            for y in range(dim):
-                new_shape[dim-1-y][x] = shape[x][y]
-        shape = new_shape
-
-    # print("Dropping Piece", piece_names[ind], "at column", col)
-    
-    # find bounding box
-    box = [dim, -1, dim, -1]
-    for x in range(dim):
-        for y in range(dim):
-            if shape[x][y] == 1:
-                box[0] = min(box[0], x)
-                box[1] = max(box[1], x)
-                box[2] = min(box[2], y)
-                box[3] = max(box[3], y)
+    dim = piece_dims[ind]
+    shape = piece_shape_rots[ind][rot]
+    box = piece_box_rots[ind][rot]
     
     # bad column
     if col + box[2] < 0 or col + box[3] >= 10:
         return None 
-    
-    board = state[0:200]
-    piece = torch.zeros(200, dtype = torch.int32)
+        
+    cur_row = 19
+
+    height = [20]*10
+    for y in range(col + box[2], col + box[3]+1):
+        while height[y] > 0 and state[(20 - height[y])*10 + y] == 0:
+            height[y] -= 1 
+
     for x in range(dim):
         for y in range(dim):
             if shape[x][y] == 1:
-                piece[(x - box[0]) * 10 + (col + y)] = 1 
-    
-    # intersects with top of board
-    if torch.sum(torch.mul(piece, board)) > 0:
+                cur_row = min(cur_row, 19 - height[col + y] - x)
+
+    if cur_row + box[0] < 0:
         return None
     
-    # try to move piece down
-    while True:
-        # piece is on the ground
-        if torch.sum(piece[190:200]) > 0:
-            break
-            
-        # if moving piece down causes intersection
-        new_piece = torch.zeros(200, dtype = torch.int32)
-        new_piece[10:200] = piece[0:190]
-        if torch.sum(torch.mul(new_piece, board)) > 0:
-            break 
-        
-        piece = new_piece
-    
-    state[0:200] = torch.add(state[0:200], piece)
+    for x in range(dim):
+        for y in range(dim):
+            if shape[x][y] == 1:
+                state[(x+cur_row)*10 + (col+y)] = 1
+
     return state
 
 def clear_lines(state):
@@ -186,7 +195,7 @@ def clear_lines(state):
             cleared += 1
             if row == 19:
                 done = True
-        else:
+        elif cleared != 0:
             state[(row+cleared)*10 : (row+cleared+1)*10] = state[row*10 : (row+1)*10]
     state[0 : cleared*10] = torch.zeros(cleared*10, dtype = torch.int32)
     return state, cleared, done
@@ -195,16 +204,18 @@ def eval(state):
     if state == None:
         return -1e9
     grid, pieces = extract_info(state)
+
     height = [20]*10
     for col in range(10):
         while height[col] > 0 and grid[20 - height[col]][col] == '_':
             height[col] -= 1 
+
     agg = sum(height)
     bump = sum([abs(height[i+1] - height[i]) for i in range(9)])
     holes = 0
-    for x in range(20):
-        for y in range(10):
-            if grid[x][y] == '_' and x > 20 - height[y]:
+    for y in range(10):
+        for x in range(20 - height[y], 20):
+            if grid[x][y] == '_':
                 holes += 1
     return -0.510066 * agg + -0.35663 * holes + -0.184483 * bump
 
@@ -269,6 +280,7 @@ def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=
     return state
 
 if __name__ == "__main__":
+    initialize()
     state = starting_position()
     print_info(state)
     moves = 0
@@ -279,6 +291,8 @@ if __name__ == "__main__":
             nxt, cleared, done = transition(state, act)
             if nxt == None:
                 continue
+                
+            # cur_score = 0.760777 * cleared + eval(nxt)
             for act2 in range(80):
                 nxt2, cleared2, done2 = transition(nxt, act2)
                 if nxt2 == None:
