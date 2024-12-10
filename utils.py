@@ -200,12 +200,20 @@ def eval(state):
         while height[col] > 0 and grid[20 - height[col]][col] == '_':
             height[col] -= 1 
     agg = sum(height)
+    agg_squared = 0
+    for h in height:
+        agg_squared += h ** 2
     bump = sum([abs(height[i+1] - height[i]) for i in range(9)])
     holes = 0
     for x in range(20):
         for y in range(10):
             if grid[x][y] == '_' and x > 20 - height[y]:
                 holes += 1
+    holes_with_depth = 0
+    for x in range(20):
+        for y in range(10):
+            if grid[x][y] == '_' and x > 20 - height[y]:
+                holes_with_depth += 20 - height[y]
     return -0.510066 * agg + -0.35663 * holes + -0.184483 * bump
 
 def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=5):
