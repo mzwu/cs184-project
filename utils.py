@@ -46,6 +46,9 @@ piece_shape_rots = []
 piece_box_rots = []
 
 def initialize():
+    if len(piece_shape_rots) > 0:
+        return
+    
     for ind in range(7):
         rots = []
         boxs = []
@@ -100,7 +103,7 @@ def print_info(state):
     print("Queue:", pieces[1:6])
     print("")
 
-def transition(state, action):
+def transition(state, action, height = []):
     """
     Life is pleasant.
     Death is peaceful.
@@ -113,7 +116,7 @@ def transition(state, action):
 
     state = np.copy(state)
     # drop piece first to update board, return if failed
-    state = drop_piece(state, action)
+    state = drop_piece(state, action, height)
     if state is None:
         return None, 0, True
 
@@ -144,7 +147,7 @@ def transition(state, action):
 
     return state, cleared, done
 
-def drop_piece(state, action):
+def drop_piece(state, action, height = []):
     # extract piece information
     # print(state, action)
     ind = np.argmax(state[200:207])
@@ -168,10 +171,11 @@ def drop_piece(state, action):
         
     cur_row = 19
 
-    height = [20]*10
-    for y in range(col + box[2], col + box[3]+1):
-        while height[y] > 0 and state[(20 - height[y])*10 + y] == 0:
-            height[y] -= 1 
+    if len(height) == 0:
+        height = [20]*10
+        for y in range(col + box[2], col + box[3]+1):
+            while height[y] > 0 and state[(20 - height[y])*10 + y] == 0:
+                height[y] -= 1 
 
     for x in range(dim):
         for y in range(dim):
@@ -201,33 +205,6 @@ def clear_lines(state):
     state[0 : cleared*10] = np.zeros(cleared*10, dtype = 'uint8')
     return state, cleared, done
 
-def eval(state):
-    if state is None:
-        return -1e9
-    grid, pieces = extract_info(state)
-
-    height = [20]*10
-    for col in range(10):
-        while height[col] > 0 and grid[20 - height[col]][col] == '_':
-            height[col] -= 1 
-
-    agg = sum(height)
-    agg_squared = 0
-    for h in height:
-        agg_squared += h ** 2
-    bump = sum([abs(height[i+1] - height[i]) for i in range(9)])
-    holes = 0
-    for y in range(10):
-        for x in range(20 - height[y], 20):
-            if grid[x][y] == '_':
-                holes += 1
-    holes_with_depth = 0
-    for x in range(20):
-        for y in range(10):
-            if grid[x][y] == '_' and x > 20 - height[y]:
-                holes_with_depth += 20 - height[y]
-    return -0.510066 * agg + -0.35663 * holes + -0.184483 * bump
-
 def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=5):
     """
     Generate a random Tetris board represented by 250 indicators (0 or 1),
@@ -253,8 +230,6 @@ def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=
     total_indicators = row_length * num_rows + my_pieces * 7
     total_cells = row_length * num_rows
     starting_holes = row_length * (num_rows - starting_rows)
-
-    print(num_pieces, my_pieces, total_indicators, total_cells, starting_holes)
 
     # Create a tensor of size 250 initialized to zeros
     state = np.zeros(total_indicators, dtype='uint8')
@@ -288,33 +263,40 @@ def starting_position(row_length=10, num_rows=20, starting_rows=10, next_pieces=
     
     return state
 
-if __name__ == "__main__":
-    initialize()
-    state = starting_position()
-    print_info(state)
-    moves = 0
-    while True:
-        best_score, best_act = -1e9, -1
-        for act in range(80):
-            cur_score = -1e9
-            nxt, cleared, done = transition(state, act)
-            if nxt is None:
-                continue
-                
-            cur_score = 0.760777 * cleared + eval(nxt)
-            # for act2 in range(80):
-            #     nxt2, cleared2, done2 = transition(nxt, act2)
-            #     if nxt2 is None:
-            #         continue
-            #     cur_score = max(cur_score, 0.760666 * (cleared + cleared2) + eval(nxt2))
-            if cur_score > best_score:
-                best_score, best_act = cur_score, act
-        moves += 1
-        state, cleared, done = transition(state, best_act)
-        if state is None:
-            break 
+def get_heights(state):
+    height = [20]*10
+    for y in range(10):
+        while height[y] > 0 and state[(20 - height[y])*10 + y] == 0:
+            height[y] -= 1 
+    return height
 
-        print_info(state)
-        if done:
-            print("Finished in", moves, "moves")
-            break
+# if __name__ == "__main__":
+#     initialize()
+#     state = starting_position()
+#     print_info(state)
+#     moves = 0
+#     while True:
+#         best_score, best_act = -1e9, -1
+#         for act in range(80):
+#             cur_score = -1e9
+#             nxt, cleared, done = transition(state, act)
+#             if nxt is None:
+#                 continue
+                
+#             cur_score = 0.760777 * cleared + eval_board(nxt)
+#             # for act2 in range(80):
+#             #     nxt2, cleared2, done2 = transition(nxt, act2)
+#             #     if nxt2 is None:
+#             #         continue
+#             #     cur_score = max(cur_score, 0.760666 * (cleared + cleared2) + eval_board(nxt2))
+#             if cur_score > best_score:
+#                 best_score, best_act = cur_score, act
+#         moves += 1
+#         state, cleared, done = transition(state, best_act)
+#         if state is None:
+#             break 
+
+#         print_info(state)
+#         if done:
+#             print("Finished in", moves, "moves")
+#             break
