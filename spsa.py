@@ -2,6 +2,7 @@ import utils
 import agent 
 import random
 import math
+import matplotlib.pyplot as plt
 
 def normalize(p):
     norm = math.sqrt(sum([x*x for x in p]))
@@ -19,6 +20,8 @@ def SPSA(p, trials = 3, bounds = [(-10,0), (-10,0), (-10,0), (0,10), (-10,0), (-
     a = 0.001
     c = 0.01
     A = 100
+
+    min_avg_cost = []
 
     for k in range(100):
         # alter parameters in the final stretch
@@ -52,7 +55,14 @@ def SPSA(p, trials = 3, bounds = [(-10,0), (-10,0), (-10,0), (0,10), (-10,0), (-
         # p = [x/norm for x in p]
         print("Iteration " + str(k+1) + ": " + str(p) + " " + str(min(mplus, mminus)))
         print()
+        min_avg_cost.append(min(mplus, mminus))
+    
+    plt.plot(min_avg_cost)
+    plt.title("avg cost per timestep")
+    plt.xlabel("timestep")
+    plt.ylabel("avg cost")
+    plt.show()
     return normalize(p)
 
 if __name__ == "__main__":
-    print("Final Result:", SPSA(p = [-0.6676757011739746, -0.31034700285664457, -0.32138862669390333, 0.0009965842688914792, -0.467225432474488, -0.36919188585391305]))
+    print("Final Result:", SPSA(p = [-1, -1, -1, 1, -1, -1]))
