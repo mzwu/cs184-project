@@ -35,7 +35,7 @@ class HeuristicAgent:
         if nxt is None:
             return -1e9
                 
-        return 0.760777 * cleared + self.eval_board(nxt)
+        return self.params[3] * cleared + self.eval_board(nxt)
     
     def eval_agent(self, print_flag = False):
         total_cost = 0
@@ -57,7 +57,7 @@ class HeuristicAgent:
                 moves += 1
                 state, cleared, done = utils.transition(state, best_act)
                 if state is None:
-                    total_cost += 1e9
+                    total_cost += 500
                     break
 
                 if print_flag:
@@ -72,7 +72,7 @@ class HeuristicAgent:
     
 
 if __name__ == "__main__":
-    agent = HeuristicAgent(trials = 10)
-    start = time.time()
-    print("Average:", agent.eval_agent())
-    print(time.time() - start)
+    agent = HeuristicAgent(trials = 30)
+    print("Average 1:", agent.eval_agent())
+    agent = HeuristicAgent(params = [-0.7814559850152453, -0.023394217039222485, -0.1961356687120126, 0.591869963380358], trials = 30)
+    print("Average 2:", agent.eval_agent())
